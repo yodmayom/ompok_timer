@@ -1,29 +1,19 @@
-from flask import Flask, request, send_file
-import os
+import asyncio
+import websockets
 
-app = Flask(__name__)
+clients = set()
 
-UPLOAD_PATH = '/tmp/latest.jpg'
+async def handler(websocket, path):
+    clients.add(websocket)
+    try:
+        async for message in websocket:
+            for client in clients:
+                if client != websocket:
+                    await client.send(message)
+    finally:
+        clients.remove(websocket)
 
-@app.route('/')
-def home():
-    return """
-    <h1>กล้องจากบ่อปลาชะโอนที่เรือนเกษตร (ชั่วคราว)</h1>
-    <img src="/view" width="400>
-    <meta http-equiv="refresh" content="1">
-    """
+start_server = websockets.serve(handler, "0.0.0.0", 8765)
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    file = request.files['frame']
-    file.save(UPLOAD_PATH)
-    return 'OK'
-
-@app.route('/view')
-def view():
-    if os.path.exists(UPLOAD_PATH):
-        return send_file(UPLOAD_PATH, mimetype='image/jpeg')
-    return 'No image available'
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+asyncio.get_event_loop().run_until_complete(start_server)
+asyncio.get_event_loop().run_forever()
