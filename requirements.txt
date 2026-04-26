@@ -1,2 +1,5 @@
 flask
-websockets
+flask-socketio
+eventlet
+opencv-python
+python-socketio

@@ -1,51 +1,31 @@
-import asyncio
-import websockets
-from flask import Flask
-import threading
-import os
+from flask import Flask, render_template_string
+from flask_socketio import SocketIO, emit
 
-clients = set()
-#websocket server
-async def handler(websocket, path):
-    clients.add(websocket)
-    try:
-        async for message in websocket:
-            for client in clients:
-                if client != websocket:
-                    await client.send(message)
-    finally:
-        clients.remove(websocket)
-
-#flask app
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+HTML = """
+<h2>📷 Live Fish Camera</h2>
+<img id="video" width="640">
+
+<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+<script>
+const socket = io();
+
+socket.on('frame', function(data) {
+    document.getElementById("video").src =
+    "data:image/jpeg;base64," + data;
+});
+</script>
+"""
 
 @app.route('/')
-def home():
-    return """
-    <h1>กล้องจากบ่อให้อาหารปลาชะโอนที่เรือนเกษตร</h1>
+def index():
+    return render_template_string(HTML)
 
-    <script>
-        const ws = new WebSocket('ws://localhost:8765');
-        
-        ws.binaryType = "blob";
+@socketio.on('frame')
+def handle_frame(data):
+    emit('frame', data, broadcast=True)
 
-        ws.onmessage = function(event) {
-            const url = URL.createObjectURL(event.data);
-            document.getElementById('video').src = url;
-        };
-    </script>
-    """
-
-def start_websocket_server():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    ws_server = websockets.serve(handler, "0.0.0.0", 8765)
-    loop.run_until_complete(ws_server)
-    loop.run_forever()
-if __name__ == '__main__':
-    t = threading.Thread(target = start_websocket_server)
-    t.start()
-
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    socketio.run(app, host="0.0.0.0", port=10000)
