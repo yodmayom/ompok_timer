@@ -3,6 +3,8 @@ import os
 
 app = Flask(__name__)
 
+UPLOAD_PATH = '/tmp/latest.jpg'
+
 @app.route('/')
 def home():
     return """
@@ -14,14 +16,14 @@ def home():
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['frame']
-    file.save('latest.jpg')
+    file.save(UPLOAD_PATH)
     return 'OK'
 
 @app.route('/view')
 def view():
-    if os.path.exists('latest.jps'):
-        return send_file('latest.jpg', mimetype='image/jpeg')
-    return 'Np image available'
+    if os.path.exists(UPLOAD_PATH):
+        return send_file(UPLOAD_PATH, mimetype='image/jpeg')
+    return 'No image available'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
