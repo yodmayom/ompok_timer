@@ -21,22 +21,33 @@ HTML = """
     <style>
         body {
             margin: 0;
-            background: #000;
+            background: #111; /* 🔥 มินิมอลขึ้น */
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             overflow: hidden;
             font-family: sans-serif;
         }
 
-        /* 📦 กล่องวิดีโอ */
+        /* 📦 container */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 📦 video box */
         .box {
-            width: 85vw;
-            height: 85vh;
+            width: 75vw;
+            height: 75vh;
+            background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
+            border-radius: 12px;
+            overflow: hidden;
         }
 
         img {
@@ -45,24 +56,20 @@ HTML = """
             object-fit: contain;
         }
 
-        /* 🎯 ปุ่มคอม */
+        /* 🎯 PC button ใต้ box */
         #pcBtn {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            padding: 10px 14px;
+            padding: 10px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             background: white;
             cursor: pointer;
-            font-size: 14px;
         }
 
-        /* 📱 ปุ่มมือถือ */
+        /* 📱 mobile button */
         #mobileBtn {
             display: none;
             position: absolute;
-            bottom: 25px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             padding: 16px 28px;
@@ -73,31 +80,43 @@ HTML = """
             font-weight: bold;
         }
 
-        /* 📱 mobile */
+        /* 📱 mobile layout */
         @media (max-width: 768px) {
             .box {
                 width: 100vw;
                 height: 100vh;
-            }
-
-            #mobileBtn {
-                display: block;
+                border-radius: 0;
             }
 
             #pcBtn {
                 display: none;
             }
+
+            #mobileBtn {
+                display: block;
+            }
+        }
+
+        /* 📱 fallback landscape */
+        .landscape-mode {
+            width: 100vh;
+            height: 100vw;
         }
     </style>
 </head>
 
 <body>
 
-<div class="box">
-    <img id="video">
+<div class="container">
+    <div class="box">
+        <img id="video">
+    </div>
+
+    <!-- 💻 PC button -->
+    <button id="pcBtn" onclick="togglePC()">Fullscreen</button>
 </div>
 
-<button id="pcBtn" onclick="togglePC()">Fullscreen</button>
+<!-- 📱 mobile button -->
 <button id="mobileBtn" onclick="toggleMobile()">ดูเต็มจอ</button>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -123,14 +142,22 @@ function togglePC() {
     }
 }
 
-/* 📱 Mobile fullscreen + landscape */
+/* 📱 mobile fullscreen + landscape */
 function toggleMobile() {
     const elem = document.documentElement;
 
     elem.requestFullscreen().then(() => {
-        if (screen.orientation) {
+
+        // Android try lock landscape
+        if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock("landscape").catch(() => {});
         }
+
+        // iOS fallback
+        setTimeout(() => {
+            document.body.classList.add("landscape-mode");
+        }, 300);
+
     });
 }
 </script>
