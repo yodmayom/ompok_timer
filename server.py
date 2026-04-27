@@ -1,5 +1,6 @@
 from flask import Flask, render_template_string
 from flask_socketio import SocketIO
+import os
 
 app = Flask(__name__)
 
@@ -13,12 +14,14 @@ HTML = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Ompok Camera</title>
+    <title>Ompok</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
         body {
             margin: 0;
-            background: black;
+            background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,67 +31,60 @@ HTML = """
         }
 
         /* 📦 กล่องวิดีโอ */
-        #videoBox {
-            width: 80vw;
-            height: 80vh;
+        .box {
+            width: 85vw;
+            height: 85vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #000;
         }
 
-        #video {
+        img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
         }
 
-        #title {
+        /* 🎯 ปุ่มคอม */
+        #pcBtn {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-        }
-
-        /* 💻 ปุ่มคอม */
-        #btnPC {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            background: white;
+            bottom: 15px;
+            right: 15px;
+            padding: 10px 14px;
             border: none;
             border-radius: 8px;
+            background: white;
             cursor: pointer;
+            font-size: 14px;
         }
 
-        /* 📱 ปุ่มมือถือ (ใหญ่) */
-        #btnMobile {
+        /* 📱 ปุ่มมือถือ */
+        #mobileBtn {
             display: none;
             position: absolute;
-            bottom: 30px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 18px 30px;
-            font-size: 20px;
-            background: #00ff88;
+            padding: 16px 28px;
+            font-size: 18px;
             border: none;
             border-radius: 12px;
+            background: #00ff88;
             font-weight: bold;
         }
 
-        /* 📱 mobile mode */
+        /* 📱 mobile */
         @media (max-width: 768px) {
-            #videoBox {
+            .box {
                 width: 100vw;
                 height: 100vh;
             }
 
-            #btnMobile {
+            #mobileBtn {
                 display: block;
             }
 
-            #btnPC {
+            #pcBtn {
                 display: none;
             }
         }
@@ -97,17 +93,12 @@ HTML = """
 
 <body>
 
-<div id="title">📷 Ompok Feeder Live</div>
-
-<div id="videoBox">
+<div class="box">
     <img id="video">
 </div>
 
-<!-- 💻 desktop -->
-<button id="btnPC" onclick="openFullPC()">⛶ Fullscreen</button>
-
-<!-- 📱 mobile -->
-<button id="btnMobile" onclick="openMobile()">📱 ซูมเต็มจอ</button>
+<button id="pcBtn" onclick="togglePC()">Fullscreen</button>
+<button id="mobileBtn" onclick="toggleMobile()">ดูเต็มจอ</button>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
@@ -121,12 +112,8 @@ socket.on("frame", (data) => {
     });
 });
 
-function isMobile() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-/* 💻 คอมเต็มจอ */
-function openFullPC() {
+/* 💻 PC fullscreen */
+function togglePC() {
     const elem = document.documentElement;
 
     if (!document.fullscreenElement) {
@@ -136,17 +123,14 @@ function openFullPC() {
     }
 }
 
-/* 📱 มือถือ + landscape */
-function openMobile() {
+/* 📱 Mobile fullscreen + landscape */
+function toggleMobile() {
     const elem = document.documentElement;
 
     elem.requestFullscreen().then(() => {
-
-        // บังคับแนวนอน
         if (screen.orientation) {
             screen.orientation.lock("landscape").catch(() => {});
         }
-
     });
 }
 </script>
@@ -164,9 +148,11 @@ def handle_frame(data):
     socketio.emit('frame', data)
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+
     socketio.run(
         app,
         host="0.0.0.0",
-        port=10000,
+        port=port,
         debug=False
     )
