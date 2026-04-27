@@ -21,7 +21,7 @@ HTML = """
     <style>
         body {
             margin: 0;
-            background: #111; /* 🔥 มินิมอลขึ้น */
+            background: #111;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -30,7 +30,6 @@ HTML = """
             font-family: sans-serif;
         }
 
-        /* 📦 container */
         .container {
             display: flex;
             flex-direction: column;
@@ -38,11 +37,10 @@ HTML = """
             gap: 12px;
         }
 
-        /* 📦 video box */
         .box {
             width: 75vw;
             height: 75vh;
-            background: #000;
+            background: black;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -56,7 +54,6 @@ HTML = """
             object-fit: contain;
         }
 
-        /* 🎯 PC button ใต้ box */
         #pcBtn {
             padding: 10px 16px;
             border: none;
@@ -65,7 +62,6 @@ HTML = """
             cursor: pointer;
         }
 
-        /* 📱 mobile button */
         #mobileBtn {
             display: none;
             position: absolute;
@@ -80,7 +76,6 @@ HTML = """
             font-weight: bold;
         }
 
-        /* 📱 mobile layout */
         @media (max-width: 768px) {
             .box {
                 width: 100vw;
@@ -96,12 +91,6 @@ HTML = """
                 display: block;
             }
         }
-
-        /* 📱 fallback landscape */
-        .landscape-mode {
-            width: 100vh;
-            height: 100vw;
-        }
     </style>
 </head>
 
@@ -112,11 +101,11 @@ HTML = """
         <img id="video">
     </div>
 
-    <!-- 💻 PC button -->
-    <button id="pcBtn" onclick="togglePC()">Fullscreen</button>
+    <!-- 💻 PC -->
+    <button id="pcBtn" onclick="togglePC()">Zoom Video</button>
 </div>
 
-<!-- 📱 mobile button -->
+<!-- 📱 Mobile -->
 <button id="mobileBtn" onclick="toggleMobile()">ดูเต็มจอ</button>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -131,32 +120,23 @@ socket.on("frame", (data) => {
     });
 });
 
-/* 💻 PC fullscreen */
+/* 💻 PC: zoom เฉพาะ video */
 function togglePC() {
-    const elem = document.documentElement;
-
     if (!document.fullscreenElement) {
-        elem.requestFullscreen();
+        img.requestFullscreen().catch(err => console.log(err));
     } else {
         document.exitFullscreen();
     }
 }
 
-/* 📱 mobile fullscreen + landscape */
+/* 📱 Mobile: zoom video + landscape */
 function toggleMobile() {
-    const elem = document.documentElement;
+    img.requestFullscreen().then(() => {
 
-    elem.requestFullscreen().then(() => {
-
-        // Android try lock landscape
+        // Android: lock landscape (ถ้ารองรับ)
         if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock("landscape").catch(() => {});
         }
-
-        // iOS fallback
-        setTimeout(() => {
-            document.body.classList.add("landscape-mode");
-        }, 300);
 
     });
 }
