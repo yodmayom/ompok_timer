@@ -19,17 +19,27 @@ HTML = """
         body {
             margin: 0;
             background: black;
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden;
             font-family: sans-serif;
         }
 
+        /* 📦 กล่องวิดีโอ */
+        #videoBox {
+            width: 80vw;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
         #video {
-            max-width: 100vw;
-            max-height: 100vh;
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
         }
 
@@ -38,18 +48,49 @@ HTML = """
             top: 10px;
             left: 10px;
             color: white;
-            font-size: 16px;
         }
 
-        #btn {
+        /* 💻 ปุ่มคอม */
+        #btnPC {
             position: absolute;
             bottom: 20px;
             right: 20px;
             padding: 10px 15px;
             background: white;
             border: none;
-            cursor: pointer;
             border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* 📱 ปุ่มมือถือ (ใหญ่) */
+        #btnMobile {
+            display: none;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 18px 30px;
+            font-size: 20px;
+            background: #00ff88;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        /* 📱 mobile mode */
+        @media (max-width: 768px) {
+            #videoBox {
+                width: 100vw;
+                height: 100vh;
+            }
+
+            #btnMobile {
+                display: block;
+            }
+
+            #btnPC {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -58,9 +99,15 @@ HTML = """
 
 <div id="title">📷 Ompok Feeder Live</div>
 
-<img id="video">
+<div id="videoBox">
+    <img id="video">
+</div>
 
-<button id="btn" onclick="toggleFullScreen()">⛶ Fullscreen</button>
+<!-- 💻 desktop -->
+<button id="btnPC" onclick="openFullPC()">⛶ Fullscreen</button>
+
+<!-- 📱 mobile -->
+<button id="btnMobile" onclick="openMobile()">📱 ซูมเต็มจอ</button>
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
@@ -78,27 +125,29 @@ function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// 🔥 Fullscreen + Auto rotate
-function toggleFullScreen() {
+/* 💻 คอมเต็มจอ */
+function openFullPC() {
     const elem = document.documentElement;
 
     if (!document.fullscreenElement) {
-        elem.requestFullscreen().then(() => {
-
-            // 📱 ถ้าเป็นมือถือ → บังคับ landscape
-            if (isMobile() && screen.orientation) {
-                screen.orientation.lock("landscape").catch(() => {});
-            }
-
-        });
+        elem.requestFullscreen();
     } else {
         document.exitFullscreen();
-
-        // 🔄 ปลดล็อก orientation
-        if (screen.orientation) {
-            screen.orientation.unlock();
-        }
     }
+}
+
+/* 📱 มือถือ + landscape */
+function openMobile() {
+    const elem = document.documentElement;
+
+    elem.requestFullscreen().then(() => {
+
+        // บังคับแนวนอน
+        if (screen.orientation) {
+            screen.orientation.lock("landscape").catch(() => {});
+        }
+
+    });
 }
 </script>
 
