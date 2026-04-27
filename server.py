@@ -30,8 +30,6 @@ HTML = """
         #video {
             max-width: 100vw;
             max-height: 100vh;
-            width: auto;
-            height: auto;
             object-fit: contain;
         }
 
@@ -76,13 +74,30 @@ socket.on("frame", (data) => {
     });
 });
 
+function isMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+// 🔥 Fullscreen + Auto rotate
 function toggleFullScreen() {
     const elem = document.documentElement;
 
     if (!document.fullscreenElement) {
-        elem.requestFullscreen();
+        elem.requestFullscreen().then(() => {
+
+            // 📱 ถ้าเป็นมือถือ → บังคับ landscape
+            if (isMobile() && screen.orientation) {
+                screen.orientation.lock("landscape").catch(() => {});
+            }
+
+        });
     } else {
         document.exitFullscreen();
+
+        // 🔄 ปลดล็อก orientation
+        if (screen.orientation) {
+            screen.orientation.unlock();
+        }
     }
 }
 </script>
