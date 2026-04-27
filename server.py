@@ -1,31 +1,70 @@
 from flask import Flask, render_template_string
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode="eventlet"
+)
 
 HTML = """
-<h2>📷 Live Fish Camera</h2>
-<img id="video" width="640">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ompok Camera</title>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+        #video {
+            width: 100vw;   /* 🔥 เต็มจอ */
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+
+<h2 style="position:absolute; top:10px; color:white;">
+📷 Ompok Feeder Live
+</h2>
+
+<img id="video">
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
 const socket = io();
 
-socket.on('frame', function(data) {
+socket.on("frame", (data) => {
     document.getElementById("video").src =
-    "data:image/jpeg;base64," + data;
+        "data:image/jpeg;base64," + data;
 });
 </script>
+
+</body>
+</html>
 """
 
 @app.route('/')
 def index():
     return render_template_string(HTML)
 
+# 🔥 รับ frame จาก Raspberry Pi
 @socketio.on('frame')
 def handle_frame(data):
-    emit('frame', data, broadcast=True)
+    socketio.emit('frame', data)  # broadcast ทุก client
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=10000)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=10000,
+        debug=False
+    )
