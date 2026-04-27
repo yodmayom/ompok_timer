@@ -14,38 +14,77 @@ HTML = """
 <html>
 <head>
     <title>Ompok Camera</title>
+
     <style>
         body {
             margin: 0;
             background: black;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            font-family: sans-serif;
         }
 
         #video {
-            width: 100vw;   /* 🔥 เต็มจอ */
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto;
             height: auto;
+            object-fit: contain;
+        }
+
+        #title {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 16px;
+        }
+
+        #btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
         }
     </style>
 </head>
+
 <body>
 
-<h2 style="position:absolute; top:10px; color:white;">
-📷 Ompok Feeder Live
-</h2>
+<div id="title">📷 Ompok Feeder Live</div>
 
 <img id="video">
 
+<button id="btn" onclick="toggleFullScreen()">⛶ Fullscreen</button>
+
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
 <script>
 const socket = io();
+const img = document.getElementById("video");
 
 socket.on("frame", (data) => {
-    document.getElementById("video").src =
-        "data:image/jpeg;base64," + data;
+    requestAnimationFrame(() => {
+        img.src = "data:image/jpeg;base64," + data;
+    });
 });
+
+function toggleFullScreen() {
+    const elem = document.documentElement;
+
+    if (!document.fullscreenElement) {
+        elem.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+}
 </script>
 
 </body>
@@ -56,10 +95,9 @@ socket.on("frame", (data) => {
 def index():
     return render_template_string(HTML)
 
-# 🔥 รับ frame จาก Raspberry Pi
 @socketio.on('frame')
 def handle_frame(data):
-    socketio.emit('frame', data)  # broadcast ทุก client
+    socketio.emit('frame', data)
 
 if __name__ == "__main__":
     socketio.run(
